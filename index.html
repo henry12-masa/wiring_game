@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>配線つなぎゲーム</title>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8398161859137802"
+ crossorigin="anonymous"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#eef3f7;
+  text-align:center;
+}
+header{
+  background:#263238;
+  color:white;
+  padding:18px;
+}
+.side-ad{
+  position:fixed;
+  top:120px;
+  width:160px;
+  z-index:999;
+}
+.left-ad{left:10px;}
+.right-ad{right:10px;}
+.ad-top{
+  max-width:900px;
+  margin:15px auto;
+}
+.game{
+  max-width:950px;
+  margin:20px auto;
+  background:white;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+.status{
+  display:flex;
+  justify-content:space-around;
+  flex-wrap:wrap;
+  gap:10px;
+  font-size:20px;
+  font-weight:bold;
+}
+.panel{
+  margin:25px auto;
+  padding:20px;
+  background:#111827;
+  border-radius:18px;
+  color:white;
+}
+.question{
+  font-size:23px;
+  font-weight:bold;
+  margin-bottom:18px;
+}
+.wire-area{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+.box{
+  background:#1f2937;
+  padding:15px;
+  border-radius:14px;
+}
+.box h3{
+  margin-top:0;
+}
+.option{
+  display:block;
+  width:100%;
+  margin:10px 0;
+  padding:16px;
+  border:none;
+  border-radius:12px;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+  background:#374151;
+  color:white;
+}
+.option:hover{
+  background:#4b5563;
+}
+.option.selected{
+  background:#f59e0b;
+  color:#111;
+}
+.option:disabled{
+  opacity:.7;
+  cursor:not-allowed;
+}
+#message{
+  min-height:35px;
+  margin-top:18px;
+  font-size:24px;
+  font-weight:bold;
+}
+.correct{color:green;}
+.wrong{color:red;}
+.restart{
+  margin-top:20px;
+  padding:12px 30px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#333;
+  color:white;
+  cursor:pointer;
+}
+@media(max-width:1200px){
+  .side-ad{display:none;}
+}
+@media(max-width:700px){
+  .wire-area{grid-template-columns:1fr;}
+  .status{font-size:16px;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="side-ad left-ad">
+<ins class="adsbygoogle"
+ style="display:block"
+ data-ad-client="ca-pub-8398161859137802"
+ data-ad-slot="5599163841"
+ data-ad-format="auto"
+ data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="side-ad right-ad">
+<ins class="adsbygoogle"
+ style="display:block"
+ data-ad-client="ca-pub-8398161859137802"
+ data-ad-slot="5599163841"
+ data-ad-format="auto"
+ data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<header>
+  <h1>🔌 配線つなぎゲーム</h1>
+  <p>左の配線を、正しい右の端子につなげよう！</p>
+</header>
+
+<div class="ad-top">
+<ins class="adsbygoogle"
+ style="display:block"
+ data-ad-client="ca-pub-8398161859137802"
+ data-ad-slot="5599163841"
+ data-ad-format="auto"
+ data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+<div class="game">
+
+  <div class="status">
+    <div>問題：<span id="qnum">1</span> / 100</div>
+    <div>スコア：<span id="score">0</span></div>
+    <div>ミス：<span id="miss">0</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="question" id="question">読み込み中...</div>
+
+    <div class="wire-area">
+      <div class="box">
+        <h3>左の配線</h3>
+        <button class="option" id="leftWire"></button>
+      </div>
+
+      <div class="box">
+        <h3>右の端子</h3>
+        <div id="choices"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="message"></div>
+
+  <button class="restart" onclick="restartGame()">もう一度遊ぶ</button>
+
+</div>
+
+<script>
+const quizData = [
+  { wire:"赤い電源線", answer:"＋端子", choices:["＋端子","−端子","映像端子","音声端子"] },
+  { wire:"黒いアース線", answer:"−端子", choices:["＋端子","−端子","USB端子","LAN端子"] },
+  { wire:"黄色い映像ケーブル", answer:"映像端子", choices:["音声端子","映像端子","電源端子","冷却端子"] },
+  { wire:"白い音声ケーブル", answer:"左音声端子", choices:["右音声端子","左音声端子","映像端子","電源端子"] },
+  { wire:"赤い音声ケーブル", answer:"右音声端子", choices:["左音声端子","右音声端子","LAN端子","USB端子"] },
+  { wire:"LANケーブル", answer:"ネット端子", choices:["ネット端子","電源端子","映像端子","音声端子"] },
+  { wire:"HDMIケーブル", answer:"HDMI端子", choices:["USB端子","HDMI端子","LAN端子","電源端子"] },
+  { wire:"USBケーブル", answer:"USB端子", choices:["USB端子","HDMI端子","音声端子","アース端子"] },
+  { wire:"マイクケーブル", answer:"マイク端子", choices:["イヤホン端子","マイク端子","映像端子","LAN端子"] },
+  { wire:"イヤホンケーブル", answer:"イヤホン端子", choices:["マイク端子","イヤホン端子","電源端子","USB端子"] },
+
+  { wire:"モーターの赤線", answer:"モーター＋", choices:["モーター＋","モーター−","センサー端子","LED端子"] },
+  { wire:"モーターの黒線", answer:"モーター−", choices:["モーター＋","モーター−","電源＋","信号端子"] },
+  { wire:"LEDの長い足", answer:"LED＋", choices:["LED＋","LED−","アース","スイッチ"] },
+  { wire:"LEDの短い足", answer:"LED−", choices:["LED＋","LED−","電源＋","信号"] },
+  { wire:"温度センサー線", answer:"センサー端子", choices:["電源端子","センサー端子","映像端子","音声端子"] },
+  { wire:"スピーカー左線", answer:"左スピーカー", choices:["右スピーカー","左スピーカー","マイク","映像"] },
+  { wire:"スピーカー右線", answer:"右スピーカー", choices:["左スピーカー","右スピーカー","USB","LAN"] },
+  { wire:"冷却ファン線", answer:"ファン端子", choices:["ファン端子","HDMI端子","音声端子","映像端子"] },
+  { wire:"スイッチ線", answer:"スイッチ端子", choices:["スイッチ端子","センサー端子","LAN端子","USB端子"] },
+  { wire:"信号線", answer:"信号端子", choices:["信号端子","電源端子","アース端子","音声端子"] }
+];
+
+while(quizData.length < 100){
+  quizData.push(...quizData.slice(0,20));
+}
+quizData.length = 100;
+
+let questions = [];
+let currentIndex = 0;
+let score = 0;
+let miss = 0;
+let answered = false;
+
+const qnumEl = document.getElementById("qnum");
+const scoreEl = document.getElementById("score");
+const missEl = document.getElementById("miss");
+const questionEl = document.getElementById("question");
+const leftWireEl = document.getElementById("leftWire");
+const choicesEl = document.getElementById("choices");
+const messageEl = document.getElementById("message");
+
+function shuffle(array){
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function startGame(){
+  questions = shuffle([...quizData]);
+  currentIndex = 0;
+  score = 0;
+  miss = 0;
+  scoreEl.textContent = score;
+  missEl.textContent = miss;
+  showQuestion();
+}
+
+function showQuestion(){
+  answered = false;
+  messageEl.textContent = "";
+  messageEl.className = "";
+
+  if(currentIndex >= questions.length){
+    questionEl.textContent = "ゲーム終了！";
+    leftWireEl.textContent = "完了";
+    choicesEl.innerHTML = "";
+    messageEl.innerHTML = `🎉 最終スコア：${score} 点`;
+    return;
+  }
+
+  const q = questions[currentIndex];
+
+  qnumEl.textContent = currentIndex + 1;
+  questionEl.textContent = "この配線はどこにつなぐ？";
+  leftWireEl.textContent = "🔌 " + q.wire;
+
+  choicesEl.innerHTML = "";
+
+  shuffle([...q.choices]).forEach(choice => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.textContent = choice;
+    btn.onclick = () => checkAnswer(choice);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function checkAnswer(choice){
+  if(answered) return;
+  answered = true;
+
+  const q = questions[currentIndex];
+  const buttons = document.querySelectorAll(".option");
+
+  buttons.forEach(btn => btn.disabled = true);
+
+  if(choice === q.answer){
+    score += 10;
+    messageEl.textContent = "✅ 正解！配線成功！";
+    messageEl.className = "correct";
+  }else{
+    miss++;
+    messageEl.textContent = `❌ ミス！正解は「${q.answer}」`;
+    messageEl.className = "wrong";
+  }
+
+  scoreEl.textContent = score;
+  missEl.textContent = miss;
+
+  setTimeout(() => {
+    currentIndex++;
+    showQuestion();
+  }, 900);
+}
+
+function restartGame(){
+  startGame();
+}
+
+startGame();
+</script>
+
+</body>
+</html>
